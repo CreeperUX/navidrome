@@ -11,6 +11,20 @@ skip / volume on any of them, and moving playback from one device to another. Th
 - Upstream files touched: `server/subsonic/api.go` (the route) and `server/subsonic/opensubsonic.go` (the extension).
   Everything else is in this folder.
 
+## The Docker image
+
+`.github/workflows/creeperux-image.yml` builds this branch with upstream's Dockerfile into
+`ghcr.io/creeperux/navidrome` (linux/amd64, linux/arm64) on every push: tags `latest`, `<upstream version>-creeperux`
+(`0.64.2-creeperux`) and `sha-<commit>`. In a compose file, only the image changes; the data folder stays as it is:
+
+```yaml
+services:
+  navidrome:
+    image: ghcr.io/creeperux/navidrome:latest   # was deluan/navidrome:latest
+```
+
+Going back to upstream is changing the image back: nothing here is stored in the database.
+
 ## Connecting
 
 A WebSocket at `rest/connect` (or `rest/connect.view`), authenticated like every Subsonic request: `u` with `t` and
