@@ -37,18 +37,19 @@ var (
 
 func login(ds model.DataStore) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		username, password, err := getCredentialsFromBody(r)
+		data, err := getLoginFromBody(r)
 		if err != nil {
 			log.Error(r, "Parsing request body", err)
 			_ = rest.RespondWithError(w, http.StatusUnprocessableEntity, err.Error())
 			return
 		}
 
-		doLogin(ds, username, password, w, r)
+		// otp: the authenticator or recovery code, when two-step verification asks for one (sonus_twofactor.go)
+		doLogin(ds, data["username"], data["password"], data["otp"], w, r)
 	}
 }
 
-func doLogin(ds model.DataStore, username string, password string, w http.ResponseWriter, r *http.Request) {
+func doLogin(ds model.DataStore, username string, password string, code string, w http.ResponseWriter, r *http.Request) {
 	user, err := validateLogin(ds.User(r.Context()), username, password)
 	if err != nil {
 		_ = rest.RespondWithError(w, http.StatusInternalServerError, "Unknown error authentication user. Please try again")
@@ -59,6 +60,9 @@ func doLogin(ds model.DataStore, username string, password string, w http.Respon
 		_ = rest.RespondWithError(w, http.StatusUnauthorized, "Invalid username or password")
 		return
 	}
+	if twoFactorSignIn(r.Context(), w, user, code) {
+		return
+	}
 
 	tokenString, err := auth.CreateToken(user)
 	if err != nil {
@@ -67,6 +71,7 @@ func doLogin(ds model.DataStore, username string, password string, w http.Respon
 	}
 	payload := buildAuthPayload(user)
 	payload["token"] = tokenString
+	withoutSubsonicToken(r.Context(), user, payload)
 	_ = rest.RespondWithJSON(w, http.StatusOK, payload)
 }
 
@@ -107,16 +112,18 @@ func LimitLoginBody(next http.Handler) http.Handler {
 }
 
 func getCredentialsFromBody(r *http.Request) (username string, password string, err error) {
+	data, err := getLoginFromBody(r)
+	return data["username"], data["password"], err
+}
+
+func getLoginFromBody(r *http.Request) (map[string]string, error) {
 	data := make(map[string]string)
 	decoder := json.NewDecoder(r.Body)
-	if err = decoder.Decode(&data); err != nil {
+	if err := decoder.Decode(&data); err != nil {
 		log.Error(r, "parsing request body", err)
-		err = errors.New("invalid request payload")
-		return
+		return data, errors.New("invalid request payload")
 	}
-	username = data["username"]
-	password = data["password"]
-	return username, password, nil
+	return data, nil
 }
 
 func createAdmin(ds model.DataStore) func(w http.ResponseWriter, r *http.Request) {
@@ -141,7 +148,7 @@ func createAdmin(ds model.DataStore) func(w http.ResponseWriter, r *http.Request
 			_ = rest.RespondWithError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-		doLogin(ds, username, password, w, r)
+		doLogin(ds, username, password, "", w, r)
 	}
 }
 

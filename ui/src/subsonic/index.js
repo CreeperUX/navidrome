@@ -9,14 +9,20 @@ const url = (command, id, options) => {
   const username = localStorage.getItem('username')
   const token = localStorage.getItem('subsonic-token')
   const salt = localStorage.getItem('subsonic-salt')
-  if (!username || !token || !salt) {
+  // Sonus: with two-step verification there is no password-derived token; the session (jwt=) signs the call instead
+  const session = localStorage.getItem('token')
+  if (!username || !((token && salt) || session)) {
     return ''
   }
 
   const params = new URLSearchParams()
   params.append('u', username)
-  params.append('t', token)
-  params.append('s', salt)
+  if (token && salt) {
+    params.append('t', token)
+    params.append('s', salt)
+  } else {
+    params.append('jwt', session)
+  }
   params.append('f', 'json')
   params.append('v', '1.8.0')
   params.append('c', 'NavidromeUI')

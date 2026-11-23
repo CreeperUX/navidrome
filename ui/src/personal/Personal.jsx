@@ -9,6 +9,7 @@ import { LastfmScrobbleToggle } from './LastfmScrobbleToggle'
 import { ListenBrainzScrobbleToggle } from './ListenBrainzScrobbleToggle'
 import config from '../config'
 import { ReplayGainToggle } from './ReplayGainToggle'
+import { SecurityCard } from '../sonus/SecurityCard'
 
 const useStyles = makeStyles({
   root: { marginTop: '1em' },
@@ -19,18 +20,22 @@ const Personal = () => {
   const classes = useStyles()
 
   return (
-    <Card className={classes.root}>
-      <Title title={'Sonus - ' + translate('menu.personal.name')} />
-      <SimpleForm toolbar={null} variant={'outlined'}>
-        <SelectTheme />
-        <SelectLanguage />
-        <SelectDefaultView />
-        {config.enableReplayGain && <ReplayGainToggle />}
-        <NotificationsToggle />
-        {config.lastFMEnabled && <LastfmScrobbleToggle />}
-        {config.listenBrainzEnabled && <ListenBrainzScrobbleToggle />}
-      </SimpleForm>
-    </Card>
+    <>
+      <Card className={classes.root}>
+        <Title title={'Sonus - ' + translate('menu.personal.name')} />
+        <SimpleForm toolbar={null} variant={'outlined'}>
+          <SelectTheme />
+          <SelectLanguage />
+          <SelectDefaultView />
+          {config.enableReplayGain && <ReplayGainToggle />}
+          <NotificationsToggle />
+          {config.lastFMEnabled && <LastfmScrobbleToggle />}
+          {config.listenBrainzEnabled && <ListenBrainzScrobbleToggle />}
+        </SimpleForm>
+      </Card>
+      {/* Sonus: two-step verification and app passwords */}
+      <SecurityCard />
+    </>
   )
 }
 

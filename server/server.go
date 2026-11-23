@@ -205,11 +205,13 @@ func (s *Server) mountAuthenticationRoutes() chi.Router {
 	r := s.router
 	return r.Route(path.Join(conf.Server.BasePath, "/auth"), func(r chi.Router) {
 		r.Use(LimitLoginBody)
+		limit := func(next http.Handler) http.Handler { return next }
 		if conf.Server.AuthRequestLimit > 0 {
 			log.Info("Login rate limit set", "requestLimit", conf.Server.AuthRequestLimit,
 				"windowLength", conf.Server.AuthWindowLength)
 
 			rateLimiter := ClientIPRateLimiter(conf.Server.AuthRequestLimit, conf.Server.AuthWindowLength)
+			limit = rateLimiter
 			r.With(rateLimiter).Post("/login", login(s.ds))
 		} else {
 			log.Warn("Login rate limit is disabled! Consider enabling it to be protected against brute-force attacks")
@@ -217,6 +219,8 @@ func (s *Server) mountAuthenticationRoutes() chi.Router {
 			r.Post("/login", login(s.ds))
 		}
 		r.Post("/createAdmin", createAdmin(s.ds))
+		// Sonus: two-step verification and app passwords (sonus_twofactor.go)
+		mountTwoFactorRoutes(r, s.ds, limit)
 	})
 }
 

@@ -36,6 +36,10 @@ var _ = Describe("Auth", func() {
 		BeforeEach(func() {
 			ds = &tests.MockDataStore{}
 			auth.Init(ds)
+			// upstream's sign-in, without Sonus's two-step verification (sonus_twofactor_test.go has that one)
+			prev := conf.Server.Sonus.TwoFactor
+			conf.Server.Sonus.TwoFactor = "off"
+			DeferCleanup(func() { conf.Server.Sonus.TwoFactor = prev })
 		})
 
 		Describe("createAdmin", func() {

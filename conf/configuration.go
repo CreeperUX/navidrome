@@ -112,6 +112,7 @@ type configOptions struct {
 	AuthWindowLength                time.Duration
 	PasswordEncryptionKey           string
 	ExtAuth                         extAuthOptions
+	Sonus                           sonusOptions
 	Plugins                         pluginsOptions
 	HTTPHeaders                     httpHeaderOptions   `json:",omitzero"`
 	Prometheus                      prometheusOptions   `json:",omitzero"`
@@ -161,6 +162,14 @@ type configOptions struct {
 	DevExternalArtistFetchMultiplier  float64
 	DevPreserveUnicodeInExternalCalls bool
 	DevEnableMediaFileProbe           bool
+}
+
+// sonusOptions are this fork's own settings (core/twofactor).
+type sonusOptions struct {
+	// TwoFactor: "required" (the default) asks everyone for an authenticator code at the web sign-in and to set one up
+	// at their next sign-in, and then takes only app passwords in the client APIs; "optional" leaves it to each user;
+	// "off" neither asks nor checks (a way back in when the codes are lost), keeping what was set up.
+	TwoFactor string
 }
 
 type scannerOptions struct {
@@ -1043,6 +1052,7 @@ func setViperDefaults() {
 	viper.SetDefault("authrequestlimit", 5)
 	viper.SetDefault("authwindowlength", consts.DefaultAuthWindowLength)
 	viper.SetDefault("passwordencryptionkey", "")
+	viper.SetDefault("sonus.twofactor", "required")
 	viper.SetDefault("extauth.userheader", "Remote-User")
 	viper.SetDefault("extauth.trustedsources", "")
 	viper.SetDefault("extauth.logouturl", "")

@@ -141,7 +141,8 @@ func authenticate(ds model.DataStore) func(next http.Handler) http.Handler {
 
 				usr, err = ds.User(ctx).FindByUsernameWithPassword(username)
 				if err == nil {
-					err = validateCredentials(usr, pass, token, salt, jwt)
+					client, _ := p.String("c")
+					err = checkCredentials(ctx, usr, pass, token, salt, jwt, client) // with two-step verification: sonus_auth.go
 				}
 				invalidLogin := errors.Is(err, model.ErrNotFound) || errors.Is(err, model.ErrInvalidAuth)
 				slot.release(invalidLogin)

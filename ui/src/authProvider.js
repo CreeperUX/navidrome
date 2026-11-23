@@ -20,25 +20,47 @@ function storeAuthenticationInfo(authInfo) {
   localStorage.setItem('username', authInfo.username)
   authInfo.avatar && localStorage.setItem('avatar', authInfo.avatar)
   localStorage.setItem('role', authInfo.isAdmin ? 'admin' : 'regular')
-  localStorage.setItem('subsonic-salt', authInfo.subsonicSalt)
-  localStorage.setItem('subsonic-token', authInfo.subsonicToken)
+  // Sonus: with two-step verification there is no password-derived Subsonic token; the session signs those calls
+  // (subsonic/index.js)
+  if (authInfo.subsonicToken && authInfo.subsonicSalt) {
+    localStorage.setItem('subsonic-salt', authInfo.subsonicSalt)
+    localStorage.setItem('subsonic-token', authInfo.subsonicToken)
+  } else {
+    localStorage.removeItem('subsonic-salt')
+    localStorage.removeItem('subsonic-token')
+  }
   localStorage.setItem('is-authenticated', 'true')
 }
 
 const authProvider = {
-  login: ({ username, password }) => {
+  login: ({ username, password, otp, twoFactorResult }) => {
+    // Sonus: two-step verification just set up answers like a sign-in (sonus/TwoFactorSetup)
+    if (twoFactorResult) {
+      jwtDecode(twoFactorResult.token) // Validate token
+      storeAuthenticationInfo(twoFactorResult)
+      config.firstTime = false
+      return Promise.resolve(twoFactorResult)
+    }
     let url = baseUrl('/auth/login')
     if (config.firstTime) {
       url = baseUrl('/auth/createAdmin')
     }
     const request = new Request(url, {
       method: 'POST',
-      body: JSON.stringify({ username, password }),
+      body: JSON.stringify({ username, password, ...(otp ? { otp } : {}) }),
       headers: new Headers({ 'Content-Type': 'application/json' }),
     })
     return fetch(request)
-      .then((response) => {
+      .then(async (response) => {
         if (response.status < 200 || response.status >= 300) {
+          // Sonus: the password was right, and two-step verification wants a code, or to be set up first
+          const body = await response.json().catch(() => ({}))
+          if (body.twoFactor) {
+            const error = new Error(body.error || response.statusText)
+            error.twoFactor = body.twoFactor
+            error.setupToken = body.setupToken
+            throw error
+          }
           throw new Error(response.statusText)
         }
         return response.json()
@@ -56,6 +78,9 @@ const authProvider = {
           error.stack === 'TypeError: Failed to fetch'
         ) {
           throw new Error('errors.network_error')
+        }
+        if (error.twoFactor) {
+          throw error // the sign-in page goes on to the second step
         }
 
         throw new Error(error)

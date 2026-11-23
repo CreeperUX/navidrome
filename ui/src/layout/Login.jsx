@@ -23,6 +23,7 @@ import useCurrentTheme from '../themes/useCurrentTheme'
 import config from '../config'
 import { clearQueue } from '../actions'
 import { INSIGHTS_DOC_URL } from '../consts.js'
+import { TwoFactorLogin } from '../sonus/TwoFactorLogin'
 
 const useStyles = makeStyles(
   (theme) => ({
@@ -318,6 +319,9 @@ const FormSignUp = ({ loading, handleSubmit, validate }) => {
 
 const Login = ({ location }) => {
   const [loading, setLoading] = useState(false)
+  // Sonus: the second step of the sign-in, { step: 'code' | 'setup', token, auth } (sonus/TwoFactorLogin)
+  const [twoFactor, setTwoFactor] = useState(null)
+  const classes = useStyles()
   const translate = useTranslate()
   const notify = useNotify()
   const login = useLogin()
@@ -330,6 +334,21 @@ const Login = ({ location }) => {
       login(auth, location.state ? location.state.nextPathname : '/').catch(
         (error) => {
           setLoading(false)
+          if (
+            error &&
+            (error.twoFactor === 'code' || error.twoFactor === 'setup')
+          ) {
+            if (error.twoFactor === 'code' && auth.otp) {
+              notify('sonus.twoFactor.invalidCode', 'warning')
+            }
+            const { otp, ...credentials } = auth // eslint-disable-line no-unused-vars
+            setTwoFactor({
+              step: error.twoFactor,
+              token: error.setupToken,
+              auth: credentials,
+            })
+            return
+          }
           notify(
             typeof error === 'string'
               ? error
@@ -376,6 +395,20 @@ const Login = ({ location }) => {
     [translate, validateLogin],
   )
 
+  if (twoFactor) {
+    return (
+      <TwoFactorLogin
+        twoFactor={twoFactor}
+        loading={loading}
+        loginClasses={classes}
+        onCode={(otp) => handleSubmit({ ...twoFactor.auth, otp })}
+        onSetupDone={(result) =>
+          handleSubmit({ ...twoFactor.auth, twoFactorResult: result })
+        }
+        onCancel={() => setTwoFactor(null)}
+      />
+    )
+  }
   if (config.firstTime) {
     return (
       <FormSignUp

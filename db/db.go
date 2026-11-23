@@ -108,6 +108,7 @@ func Init(ctx context.Context) func() {
 	if err != nil {
 		log.Fatal(ctx, "Failed to apply new migrations", err)
 	}
+	initSonusSchema(ctx, db) // this fork's tables, outside upstream's migrations: sonus.go
 
 	if hasSchemaChanges {
 		log.Debug(ctx, "Running ANALYZE after schema changes")
