@@ -87,11 +87,15 @@ const LinkToVersion = ({ version }) => {
   const parts = version.split(' ')
   const commitID = parts[1].replace(/[()]/g, '')
   const isSnapshot = version.includes('SNAPSHOT')
-  const url = isSnapshot
-    ? `https://github.com/navidrome/navidrome/compare/v${
-        parts[0].split('-')[0]
-      }...${commitID}`
-    : `https://github.com/navidrome/navidrome/releases/tag/v${parts[0]}`
+  // Sonus builds (0.64.2-sonus) come from the CreeperUX/navidrome fork: link to the commit there
+  const isSonus = /-(sonus|creeperux)\b/.test(parts[0])
+  const url = isSonus
+    ? `https://github.com/CreeperUX/navidrome/commit/${commitID}`
+    : isSnapshot
+      ? `https://github.com/navidrome/navidrome/compare/v${
+          parts[0].split('-')[0]
+        }...${commitID}`
+      : `https://github.com/navidrome/navidrome/releases/tag/v${parts[0]}`
   return (
     <>
       <Link href={url} target="_blank" rel="noopener noreferrer">
@@ -472,7 +476,7 @@ const AboutDialog = ({ open, onClose }) => {
       className={classes.expandableDialog}
     >
       <DialogTitle id="about-dialog-title" onClose={onClose}>
-        Navidrome Music Server
+        Sonus, based on Navidrome
       </DialogTitle>
       <DialogContent dividers>
         <TabContent

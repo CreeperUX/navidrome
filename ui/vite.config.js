@@ -59,15 +59,15 @@ export default defineConfig({
 // PWA manifest
 function manifest() {
   return {
-    name: 'Navidrome',
-    short_name: 'Navidrome',
+    name: 'Sonus',
+    short_name: 'Sonus',
     description:
-      'Navidrome, an open source web-based music collection server and streamer',
+      'Sonus, a music server for your own collection, based on Navidrome',
     categories: ['music', 'entertainment'],
     display: 'standalone',
     start_url: './',
-    background_color: 'white',
-    theme_color: 'blue',
+    background_color: '#040607',
+    theme_color: '#040607',
     icons: [
       {
         src: './android-chrome-192x192.png',

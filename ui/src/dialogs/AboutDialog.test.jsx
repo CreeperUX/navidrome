@@ -54,4 +54,15 @@ describe('<LinkToVersion />', () => {
     const cell = screen.queryByRole('cell')
     expect(cell.textContent).toBe('0.40.0-SNAPSHOT (300a0292)')
   })
+
+  it('should render link to the fork commit for Sonus builds', () => {
+    const version = '0.64.2-sonus (046ddbb5)'
+    render(<Wrapper version={version} />)
+
+    const link = screen.queryByRole('link')
+    expect(link.href).toBe(
+      'https://github.com/CreeperUX/navidrome/commit/046ddbb5',
+    )
+    expect(link.textContent).toBe('0.64.2-sonus')
+  })
 })

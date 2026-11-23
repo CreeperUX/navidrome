@@ -1020,7 +1020,7 @@ func setViperDefaults() {
 	viper.SetDefault("enablefavourites", true)
 	viper.SetDefault("enablestarrating", true)
 	viper.SetDefault("enableuserediting", true)
-	viper.SetDefault("defaulttheme", "Dark")
+	viper.SetDefault("defaulttheme", "Sonus") // this fork's own theme (ui/src/themes/sonus.js); upstream: "Dark"
 	viper.SetDefault("defaultlanguage", "")
 	viper.SetDefault("defaultuivolume", consts.DefaultUIVolume)
 	viper.SetDefault("uisearchdebouncems", consts.DefaultUISearchDebounceMs)

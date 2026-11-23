@@ -25,8 +25,12 @@ import MoonbaseAlphaTheme from './moonbaseAlpha'
 import MoonbaseBravoTheme from './moonbaseBravo'
 import TokyoNightLightTheme from './tokyoNightLight'
 import TokyoNightTheme from './tokyoNight'
+import SonusTheme from './sonus'
 
 export default {
+  // Sonus (this fork's default, conf: DefaultTheme)
+  SonusTheme,
+
   // Classic default themes
   LightTheme,
   DarkTheme,
