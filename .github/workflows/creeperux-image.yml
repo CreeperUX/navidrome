@@ -50,9 +50,10 @@ jobs:
         id: meta
         with:
           images: ${{ steps.version.outputs.image }}
+          # the version first: it is what the image's version label says
           tags: |
-            type=raw,value=latest
             type=raw,value=${{ steps.version.outputs.version }}
+            type=raw,value=latest
             type=sha,prefix=sha-
           labels: |
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
