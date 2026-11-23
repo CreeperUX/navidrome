@@ -1,10 +1,11 @@
-# CreeperUX Connect
+# Sonus Connect
 
 A user's players see and control each other, as with Spotify Connect: which device plays what, play / pause / seek /
 skip / volume on any of them, and moving playback from one device to another. This fork of Navidrome
-([CreeperUX/navidrome](https://github.com/CreeperUX/navidrome)) adds it; everything else is upstream Navidrome.
+([CreeperUX/navidrome](https://github.com/CreeperUX/navidrome)) adds it; everything else is upstream Navidrome. It was
+made for Sonus, a Windows player; any client can implement it from this page.
 
-- Advertised as the OpenSubsonic extension `creeperuxConnect`, version 1 (`getOpenSubsonicExtensions`). A client
+- Advertised as the OpenSubsonic extension `sonusConnect`, version 1 (`getOpenSubsonicExtensions`). A client
   that doesn't find it doesn't offer the feature, so it works with any other server.
 - Nothing is stored: who is connected and what they play is kept in memory. The database is upstream's, untouched,
   so switching back to upstream Navidrome needs nothing.
@@ -32,7 +33,7 @@ A WebSocket at `rest/connect` (or `rest/connect.view`), authenticated like every
 (Settings › Players in the web UI): its id is the player's, its first name the player's name.
 
 ```
-wss://music.example.com/rest/connect.view?u=alice&t=…&s=…&v=1.16.1&c=CreeperUX%20Music&f=json
+wss://music.example.com/rest/connect.view?u=alice&t=…&s=…&v=1.16.1&c=Sonus&f=json
 ```
 
 The server pings every 30 s (clients' WebSockets answer by themselves); a connection silent for 75 s is closed. A

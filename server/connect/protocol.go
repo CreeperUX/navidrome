@@ -5,7 +5,7 @@ import "encoding/json"
 // Extension is the OpenSubsonic extension name this server advertises (getOpenSubsonicExtensions), and Version its
 // version. Clients look for it before opening rest/connect, so they keep working against servers without it.
 const (
-	Extension = "creeperuxConnect"
+	Extension = "sonusConnect"
 	Version   = 1
 )
 

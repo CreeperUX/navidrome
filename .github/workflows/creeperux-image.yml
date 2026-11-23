@@ -1,4 +1,4 @@
-# The fork's own Docker image, ghcr.io/creeperux/navidrome: upstream Navidrome plus CreeperUX Connect (server/connect),
+# The fork's own Docker image, ghcr.io/creeperux/navidrome: upstream Navidrome plus Sonus Connect (server/connect),
 # built from the creeperux branch with upstream's Dockerfile, for linux/amd64 and linux/arm64.
 # Tags: latest, <upstream version>-creeperux (0.64.2-creeperux), and sha-<commit>.
 # Upstream's own workflows (pipeline.yml and the rest) run only for master, v* tags, pull requests and schedules, so
@@ -58,7 +58,7 @@ jobs:
           labels: |
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
             org.opencontainers.image.title=Navidrome (CreeperUX)
-            org.opencontainers.image.description=Navidrome with CreeperUX Connect: a user's players see and control each other
+            org.opencontainers.image.description=Navidrome with Sonus Connect: a user's players see and control each other
 
       - uses: docker/build-push-action@v7
         with:

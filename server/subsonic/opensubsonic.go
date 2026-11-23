@@ -17,7 +17,7 @@ func (api *Router) GetOpenSubsonicExtensions(_ *http.Request) (*responses.Subson
 		{Name: "transcoding", Versions: []int32{1}},
 		{Name: "playbackReport", Versions: []int32{1}},
 		{Name: "topSongsByArtistId", Versions: []int32{1}},
-		{Name: connect.Extension, Versions: []int32{connect.Version}}, // CreeperUX Connect (server/connect)
+		{Name: connect.Extension, Versions: []int32{connect.Version}}, // Sonus Connect (server/connect)
 	}
 	if api.sonic != nil && api.sonic.HasProvider() {
 		extensions = append(extensions, responses.OpenSubsonicExtension{

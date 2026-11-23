@@ -55,8 +55,8 @@ var _ = Describe("GetOpenSubsonicExtensions", func() {
 			err := json.Unmarshal(w.Body.Bytes(), &response)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(*response.Subsonic.OpenSubsonicExtensions).To(SatisfyAll(
-				HaveLen(8), // upstream's 7, and CreeperUX Connect
-				ContainElement(responses.OpenSubsonicExtension{Name: "creeperuxConnect", Versions: []int32{1}}),
+				HaveLen(8), // upstream's 7, and Sonus Connect
+				ContainElement(responses.OpenSubsonicExtension{Name: "sonusConnect", Versions: []int32{1}}),
 				ContainElement(responses.OpenSubsonicExtension{Name: "transcodeOffset", Versions: []int32{1}}),
 				ContainElement(responses.OpenSubsonicExtension{Name: "formPost", Versions: []int32{1}}),
 				ContainElement(responses.OpenSubsonicExtension{Name: "songLyrics", Versions: []int32{1, 2}}),
@@ -87,8 +87,8 @@ var _ = Describe("GetOpenSubsonicExtensions", func() {
 			err := json.Unmarshal(w.Body.Bytes(), &response)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(*response.Subsonic.OpenSubsonicExtensions).To(SatisfyAll(
-				HaveLen(9), // upstream's 8, and CreeperUX Connect
-				ContainElement(responses.OpenSubsonicExtension{Name: "creeperuxConnect", Versions: []int32{1}}),
+				HaveLen(9), // upstream's 8, and Sonus Connect
+				ContainElement(responses.OpenSubsonicExtension{Name: "sonusConnect", Versions: []int32{1}}),
 				ContainElement(responses.OpenSubsonicExtension{Name: "transcodeOffset", Versions: []int32{1}}),
 				ContainElement(responses.OpenSubsonicExtension{Name: "formPost", Versions: []int32{1}}),
 				ContainElement(responses.OpenSubsonicExtension{Name: "songLyrics", Versions: []int32{1, 2}}),

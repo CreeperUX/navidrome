@@ -217,7 +217,7 @@ func (api *Router) routes() http.Handler {
 			h501(r, "getShares", "createShare", "updateShare", "deleteShare")
 		}
 
-		// CreeperUX Connect: a user's players see and control each other (server/connect)
+		// Sonus Connect: a user's players see and control each other (server/connect)
 		r.Group(func(r chi.Router) {
 			r.Use(getPlayer(api.players))
 			addHandler(r, "connect", connect.GetHub().ServeHTTP)
