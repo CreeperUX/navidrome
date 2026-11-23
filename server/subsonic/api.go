@@ -24,6 +24,7 @@ import (
 	"github.com/navidrome/navidrome/log"
 	"github.com/navidrome/navidrome/model"
 	"github.com/navidrome/navidrome/server"
+	"github.com/navidrome/navidrome/server/connect"
 	"github.com/navidrome/navidrome/server/events"
 	"github.com/navidrome/navidrome/server/subsonic/responses"
 	"github.com/navidrome/navidrome/utils/req"
@@ -215,6 +216,12 @@ func (api *Router) routes() http.Handler {
 		} else {
 			h501(r, "getShares", "createShare", "updateShare", "deleteShare")
 		}
+
+		// CreeperUX Connect: a user's players see and control each other (server/connect)
+		r.Group(func(r chi.Router) {
+			r.Use(getPlayer(api.players))
+			addHandler(r, "connect", connect.GetHub().ServeHTTP)
+		})
 
 		if conf.Server.Jukebox.Enabled {
 			r.Group(func(r chi.Router) {
