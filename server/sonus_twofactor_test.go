@@ -16,6 +16,7 @@ import (
 	"github.com/navidrome/navidrome/db"
 	"github.com/navidrome/navidrome/model"
 	"github.com/navidrome/navidrome/model/id"
+	"github.com/navidrome/navidrome/model/request"
 	"github.com/navidrome/navidrome/persistence"
 	"github.com/navidrome/navidrome/tests"
 	. "github.com/onsi/ginkgo/v2"
@@ -123,6 +124,23 @@ var _ = Describe("Two-step verification at sign-in (Sonus)", Ordered, func() {
 		Expect(code).To(Equal(http.StatusOK))
 		code, _ = signIn(recovery[0].(string))
 		Expect(code).To(Equal(http.StatusUnauthorized))
+	})
+
+	It("keeps the password-derived token out of a sign-in by a trusted proxy too", func() {
+		conf.Server.ExtAuth.TrustedSources = "192.168.0.0/16"
+		conf.Server.ExtAuth.UserHeader = "Remote-User"
+		fromProxy := func() map[string]any {
+			req := httptest.NewRequest("GET", "/", nil)
+			req = req.WithContext(request.WithReverseProxyIp(req.Context(), "192.168.0.42"))
+			req.Header.Set("Remote-User", user.UserName)
+			return handleLoginFromHeaders(ds, req)
+		}
+		Expect(fromProxy()).To(HaveKey("subsonicToken"), "not set up yet: as upstream")
+		setUp()
+		payload := fromProxy() // the session token is added by its caller (serve_index)
+		Expect(payload["username"]).To(Equal(user.UserName))
+		Expect(payload).ToNot(HaveKey("subsonicToken"))
+		Expect(payload).ToNot(HaveKey("subsonicSalt"))
 	})
 
 	It("refuses the wrong password before anything else", func() {

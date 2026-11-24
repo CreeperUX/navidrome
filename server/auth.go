@@ -418,7 +418,10 @@ func handleLoginFromHeaders(ds model.DataStore, r *http.Request) map[string]any 
 		return nil
 	}
 
-	return buildAuthPayload(user)
+	payload := buildAuthPayload(user)
+	// Sonus: as at a sign-in with the password, no password-derived token in the browser for a two-step user
+	withoutSubsonicToken(r.Context(), user, payload)
+	return payload
 }
 
 func validateIPAgainstList(ip string, comaSeparatedList string) bool {
