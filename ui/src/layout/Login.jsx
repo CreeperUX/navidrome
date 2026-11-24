@@ -331,34 +331,36 @@ const Login = ({ location }) => {
     (auth) => {
       setLoading(true)
       dispatch(clearQueue())
-      login(auth, location.state ? location.state.nextPathname : '/').catch(
-        (error) => {
-          setLoading(false)
-          if (
-            error &&
-            (error.twoFactor === 'code' || error.twoFactor === 'setup')
-          ) {
-            if (error.twoFactor === 'code' && auth.otp) {
-              notify('sonus.twoFactor.invalidCode', 'warning')
-            }
-            const { otp, ...credentials } = auth // eslint-disable-line no-unused-vars
-            setTwoFactor({
-              step: error.twoFactor,
-              token: error.setupToken,
-              auth: credentials,
-            })
-            return
+      // back where the sign-in was asked for, with its query too (Sonus: #/device?code=…)
+      const next = location.state
+        ? location.state.nextPathname + (location.state.nextSearch || '')
+        : '/'
+      login(auth, next).catch((error) => {
+        setLoading(false)
+        if (
+          error &&
+          (error.twoFactor === 'code' || error.twoFactor === 'setup')
+        ) {
+          if (error.twoFactor === 'code' && auth.otp) {
+            notify('sonus.twoFactor.invalidCode', 'warning')
           }
-          notify(
-            typeof error === 'string'
-              ? error
-              : typeof error === 'undefined' || !error.message
-                ? 'ra.auth.sign_in_error'
-                : error.message,
-            'warning',
-          )
-        },
-      )
+          const { otp, ...credentials } = auth // eslint-disable-line no-unused-vars
+          setTwoFactor({
+            step: error.twoFactor,
+            token: error.setupToken,
+            auth: credentials,
+          })
+          return
+        }
+        notify(
+          typeof error === 'string'
+            ? error
+            : typeof error === 'undefined' || !error.message
+              ? 'ra.auth.sign_in_error'
+              : error.message,
+          'warning',
+        )
+      })
     },
     [dispatch, login, notify, setLoading, location],
   )

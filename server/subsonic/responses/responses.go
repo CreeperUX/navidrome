@@ -63,6 +63,12 @@ type Subsonic struct {
 	PlayQueueByIndex       *PlayQueueByIndex       `xml:"playQueueByIndex,omitempty" json:"playQueueByIndex,omitempty"`
 	TranscodeDecision      *TranscodeDecision      `xml:"transcodeDecision,omitempty"       json:"transcodeDecision,omitempty"`
 	SonicMatches           *Array[SonicMatch]      `xml:"sonicMatch,omitempty"              json:"sonicMatch,omitempty"`
+	TokenInfo              *TokenInfo              `xml:"tokenInfo,omitempty"               json:"tokenInfo,omitempty"` // Sonus: apiKeyAuthentication
+}
+
+// TokenInfo is OpenSubsonic's tokenInfo (apiKeyAuthentication): whose API key it is.
+type TokenInfo struct {
+	Username string `xml:"username,attr" json:"username"`
 }
 
 const (

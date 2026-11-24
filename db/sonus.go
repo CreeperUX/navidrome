@@ -36,8 +36,46 @@ CREATE TABLE IF NOT EXISTS sonus_app_password (
 CREATE INDEX IF NOT EXISTS sonus_app_password_user ON sonus_app_password(user_id);
 `
 
+// SonusUpgrade brings tables made by an earlier build up to date: each step runs once, when its column is missing.
+// App passwords gained secret_hash (sha256 of the password), to find the user an API key belongs to; filled in by
+// core/twofactor, which can open the sealed passwords.
+func SonusUpgrade(ctx context.Context, db *sql.DB) error {
+	has, err := hasColumn(ctx, db, "sonus_app_password", "secret_hash")
+	if err != nil {
+		return err
+	}
+	if !has {
+		if _, err := db.ExecContext(ctx, `ALTER TABLE sonus_app_password ADD COLUMN secret_hash TEXT NOT NULL DEFAULT ''`); err != nil {
+			return err
+		}
+	}
+	_, err = db.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS sonus_app_password_hash ON sonus_app_password(secret_hash)`)
+	return err
+}
+
+func hasColumn(ctx context.Context, db *sql.DB, table, column string) (bool, error) {
+	rows, err := db.QueryContext(ctx, `SELECT name FROM pragma_table_info(?)`, table)
+	if err != nil {
+		return false, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var name string
+		if err := rows.Scan(&name); err != nil {
+			return false, err
+		}
+		if name == column {
+			return true, nil
+		}
+	}
+	return false, rows.Err()
+}
+
 func initSonusSchema(ctx context.Context, db *sql.DB) {
 	if _, err := db.ExecContext(ctx, SonusSchema); err != nil {
 		log.Fatal(ctx, "Failed to create Sonus's tables", err)
+	}
+	if err := SonusUpgrade(ctx, db); err != nil {
+		log.Fatal(ctx, "Failed to upgrade Sonus's tables", err)
 	}
 }

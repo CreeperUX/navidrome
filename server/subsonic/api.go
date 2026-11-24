@@ -109,6 +109,7 @@ func (api *Router) routes() http.Handler {
 			h(r, "ping", api.Ping)
 			h(r, "getLicense", api.GetLicense)
 		})
+		h(r, "tokenInfo", api.GetTokenInfo) // Sonus: apiKeyAuthentication (sonus_auth.go)
 		r.Group(func(r chi.Router) {
 			r.Use(getPlayer(api.players))
 			h(r, "getMusicFolders", api.GetMusicFolders)

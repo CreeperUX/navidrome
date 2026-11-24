@@ -90,8 +90,53 @@ var defaultStore = sync.OnceValue(func() *Store { return New(db.Db()) })
 func Instance() *Store { return defaultStore() }
 
 func (s *Store) ready() error {
-	s.once.Do(func() { _, s.initErr = s.db.ExecContext(context.Background(), db.SonusSchema) })
+	s.once.Do(func() {
+		ctx := context.Background()
+		if _, s.initErr = s.db.ExecContext(ctx, db.SonusSchema); s.initErr != nil {
+			return
+		}
+		if s.initErr = db.SonusUpgrade(ctx, s.db); s.initErr != nil {
+			return
+		}
+		s.initErr = s.fillHashes(ctx)
+	})
 	return s.initErr
+}
+
+// fillHashes gives the app passwords made before API keys their hash, so they work as API keys too.
+func (s *Store) fillHashes(ctx context.Context) error {
+	rows, err := s.db.QueryContext(ctx, `SELECT id, secret FROM sonus_app_password WHERE secret_hash = ''`)
+	if err != nil {
+		return err
+	}
+	type row struct{ id, sealed string }
+	var todo []row
+	for rows.Next() {
+		var r row
+		if err := rows.Scan(&r.id, &r.sealed); err != nil {
+			rows.Close()
+			return err
+		}
+		todo = append(todo, r)
+	}
+	rows.Close()
+	for _, r := range todo {
+		password, err := open(ctx, r.sealed)
+		if err != nil {
+			continue // unreadable: it cannot match anything anyway
+		}
+		if _, err := s.db.ExecContext(ctx, `UPDATE sonus_app_password SET secret_hash = ? WHERE id = ?`, keyHash(password), r.id); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// keyHash finds an app password from what a client sends as an API key: as shown or without its dashes, any case.
+func keyHash(key string) string {
+	normal := strings.ToLower(strings.NewReplacer("-", "", " ", "").Replace(strings.TrimSpace(key)))
+	sum := sha256.Sum256([]byte(normal))
+	return hex.EncodeToString(sum[:])
 }
 
 // Enabled: the user has two-step verification set up and the policy is not Off, so the account password alone opens
@@ -262,13 +307,22 @@ func (s *Store) Disable(ctx context.Context, userID string) error {
 
 // ---------------------------------------------------------------- app passwords
 
-// CreateAppPassword makes an app password for one client or device ("书房电脑"); the password itself is returned this
-// once and never shown again.
+// CreateAppPassword makes an app password for one client or device ("书房电脑"), short enough to type in; the password
+// itself is returned this once and never shown again. It is also an API key (OpenSubsonic apiKeyAuthentication).
 func (s *Store) CreateAppPassword(ctx context.Context, userID, name string) (AppPassword, string, error) {
+	return s.create(ctx, userID, name, 16)
+}
+
+// CreateAPIKey is an app password a client was handed by the browser sign-in (DeviceLogin): never typed, so longer.
+func (s *Store) CreateAPIKey(ctx context.Context, userID, name string) (AppPassword, string, error) {
+	return s.create(ctx, userID, name, 32)
+}
+
+func (s *Store) create(ctx context.Context, userID, name string, length int) (AppPassword, string, error) {
 	if err := s.ready(); err != nil {
 		return AppPassword{}, "", err
 	}
-	password, err := randomString(16, 4)
+	password, err := randomString(length, 4)
 	if err != nil {
 		return AppPassword{}, "", err
 	}
@@ -280,9 +334,50 @@ func (s *Store) CreateAppPassword(ctx context.Context, userID, name string) (App
 	if ap.Name == "" {
 		ap.Name = "App"
 	}
-	_, err = s.db.ExecContext(ctx, `INSERT INTO sonus_app_password (id, user_id, name, secret, created_at) VALUES (?, ?, ?, ?, ?)`,
-		ap.ID, userID, ap.Name, sealed, ap.CreatedAt)
+	_, err = s.db.ExecContext(ctx, `INSERT INTO sonus_app_password (id, user_id, name, secret, secret_hash, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
+		ap.ID, userID, ap.Name, sealed, keyHash(password), ap.CreatedAt)
 	return ap, password, err
+}
+
+// UserForAPIKey is the user an API key (an app password) belongs to, or "" for none; the use is noted as
+// MatchAppPassword notes it.
+func (s *Store) UserForAPIKey(ctx context.Context, key, client string) (string, error) {
+	if err := s.ready(); err != nil {
+		return "", err
+	}
+	var id, userID, by string
+	var used sql.NullTime
+	err := s.db.QueryRowContext(ctx, `SELECT id, user_id, last_used_at, last_used_by FROM sonus_app_password WHERE secret_hash = ?`, keyHash(key)).
+		Scan(&id, &userID, &used, &by)
+	if errors.Is(err, sql.ErrNoRows) {
+		return "", nil
+	}
+	if err != nil {
+		return "", err
+	}
+	s.noteUse(ctx, id, used, by, client)
+	return userID, nil
+}
+
+// RevokeAPIKey deletes the app password that is this key: a client signing out gives its own key back.
+func (s *Store) RevokeAPIKey(ctx context.Context, key string) (bool, error) {
+	if err := s.ready(); err != nil {
+		return false, err
+	}
+	res, err := s.db.ExecContext(ctx, `DELETE FROM sonus_app_password WHERE secret_hash = ?`, keyHash(key))
+	if err != nil {
+		return false, err
+	}
+	n, _ := res.RowsAffected()
+	return n > 0, nil
+}
+
+// noteUse records who used an app password, at most every few minutes: clients sign every request.
+func (s *Store) noteUse(ctx context.Context, id string, used sql.NullTime, by, client string) {
+	now := s.now().UTC()
+	if !used.Valid || now.Sub(used.Time) > 5*time.Minute || by != client {
+		_, _ = s.db.ExecContext(ctx, `UPDATE sonus_app_password SET last_used_at = ?, last_used_by = ? WHERE id = ?`, now, client, id)
+	}
 }
 
 // AppPasswords of a user, newest first.
@@ -356,10 +451,7 @@ func (s *Store) MatchAppPassword(ctx context.Context, userID string, check func(
 		if !check(password) && !check(strings.ReplaceAll(password, "-", "")) {
 			continue
 		}
-		now := s.now().UTC()
-		if !c.used.Valid || now.Sub(c.used.Time) > 5*time.Minute || c.by != client {
-			_, _ = s.db.ExecContext(ctx, `UPDATE sonus_app_password SET last_used_at = ?, last_used_by = ? WHERE id = ?`, now, client, c.id)
-		}
+		s.noteUse(ctx, c.id, c.used, c.by, client)
 		return true, nil
 	}
 	return false, nil

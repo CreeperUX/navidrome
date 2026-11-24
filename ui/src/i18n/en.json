@@ -798,6 +798,20 @@
       "createdTitle": "App password for “%{name}”",
       "createdExplain": "Enter it in the app where it asks for your password (with or without the dashes), with your usual username.",
       "onlyOnce": "It is shown only now. If you lose it, revoke it and create another."
+    },
+    "device": {
+      "title": "Sign in an app",
+      "request": "%{client} on “%{device}” asks to sign in to your account (%{user}).",
+      "compare": "Check that the app shows this same code. If it does not, or you did not start a sign-in, refuse.",
+      "codeLabel": "Code",
+      "whatItGets": "Allowing it gives the app an API key of its own: it can play and manage your music, but cannot sign in to this website or change your account. You can revoke it any time under App passwords in your personal settings.",
+      "allow": "Allow %{client}",
+      "deny": "Refuse",
+      "allowed": "Allowed. Go back to %{client}: it finishes signing in by itself.",
+      "denied": "%{client} was refused.",
+      "missing": "No sign-in is waiting for this code: it may have expired. Start again in the app.",
+      "typeCode": "Enter the code the app shows.",
+      "continue": "Continue"
     }
   }
 }

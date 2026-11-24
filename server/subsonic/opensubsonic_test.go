@@ -55,8 +55,10 @@ var _ = Describe("GetOpenSubsonicExtensions", func() {
 			err := json.Unmarshal(w.Body.Bytes(), &response)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(*response.Subsonic.OpenSubsonicExtensions).To(SatisfyAll(
-				HaveLen(8), // upstream's 7, and Sonus Connect
+				HaveLen(10), // upstream's 7, and Sonus Connect, apiKeyAuthentication and sonusDeviceLogin
 				ContainElement(responses.OpenSubsonicExtension{Name: "sonusConnect", Versions: []int32{1}}),
+				ContainElement(responses.OpenSubsonicExtension{Name: "apiKeyAuthentication", Versions: []int32{1}}),
+				ContainElement(responses.OpenSubsonicExtension{Name: "sonusDeviceLogin", Versions: []int32{1}}),
 				ContainElement(responses.OpenSubsonicExtension{Name: "transcodeOffset", Versions: []int32{1}}),
 				ContainElement(responses.OpenSubsonicExtension{Name: "formPost", Versions: []int32{1}}),
 				ContainElement(responses.OpenSubsonicExtension{Name: "songLyrics", Versions: []int32{1, 2}}),
@@ -87,8 +89,10 @@ var _ = Describe("GetOpenSubsonicExtensions", func() {
 			err := json.Unmarshal(w.Body.Bytes(), &response)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(*response.Subsonic.OpenSubsonicExtensions).To(SatisfyAll(
-				HaveLen(9), // upstream's 8, and Sonus Connect
+				HaveLen(11), // upstream's 8, and Sonus Connect, apiKeyAuthentication and sonusDeviceLogin
 				ContainElement(responses.OpenSubsonicExtension{Name: "sonusConnect", Versions: []int32{1}}),
+				ContainElement(responses.OpenSubsonicExtension{Name: "apiKeyAuthentication", Versions: []int32{1}}),
+				ContainElement(responses.OpenSubsonicExtension{Name: "sonusDeviceLogin", Versions: []int32{1}}),
 				ContainElement(responses.OpenSubsonicExtension{Name: "transcodeOffset", Versions: []int32{1}}),
 				ContainElement(responses.OpenSubsonicExtension{Name: "formPost", Versions: []int32{1}}),
 				ContainElement(responses.OpenSubsonicExtension{Name: "songLyrics", Versions: []int32{1, 2}}),

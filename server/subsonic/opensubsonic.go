@@ -3,6 +3,7 @@ package subsonic
 import (
 	"net/http"
 
+	"github.com/navidrome/navidrome/server"
 	"github.com/navidrome/navidrome/server/connect"
 	"github.com/navidrome/navidrome/server/subsonic/responses"
 )
@@ -18,6 +19,8 @@ func (api *Router) GetOpenSubsonicExtensions(_ *http.Request) (*responses.Subson
 		{Name: "playbackReport", Versions: []int32{1}},
 		{Name: "topSongsByArtistId", Versions: []int32{1}},
 		{Name: connect.Extension, Versions: []int32{connect.Version}}, // Sonus Connect (server/connect)
+		{Name: apiKeyExtension, Versions: []int32{1}},                 // Sonus: app passwords as API keys (sonus_auth.go)
+		{Name: server.DeviceLoginExtension, Versions: []int32{1}},     // Sonus: the browser sign-in for apps
 	}
 	if api.sonic != nil && api.sonic.HasProvider() {
 		extensions = append(extensions, responses.OpenSubsonicExtension{

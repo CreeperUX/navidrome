@@ -367,4 +367,5 @@ func mountTwoFactorRoutes(r chi.Router, ds model.DataStore, limit func(http.Hand
 		r.Get("/2fa/users/{userId}", adminOnlyHandler(twoFactorUserStatus))
 		r.Post("/2fa/users/{userId}/reset", adminOnlyHandler(twoFactorUserReset))
 	})
+	mountDeviceLoginRoutes(r, ds, limit) // the browser sign-in for apps: sonus_device.go
 }

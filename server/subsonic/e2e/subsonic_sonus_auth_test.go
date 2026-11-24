@@ -85,4 +85,59 @@ var _ = Describe("Two-step verification in the Subsonic API (Sonus)", func() {
 		Expect(store.DeleteAppPassword(ctx, regularUser.ID, ap.ID)).To(BeTrue())
 		Expect(ping("p", password).Status).To(Equal(responses.StatusFailed))
 	})
+
+	Describe("API keys (OpenSubsonic apiKeyAuthentication)", func() {
+		// a request signed by an API key alone: no u=
+		withKey := func(endpoint string, params ...string) *responses.Subsonic {
+			q := url.Values{}
+			q.Add("v", "1.16.1")
+			q.Add("c", "Sonus (PC)")
+			q.Add("f", "json")
+			for i := 0; i < len(params); i += 2 {
+				q.Add(params[i], params[i+1])
+			}
+			w := httptest.NewRecorder()
+			router.ServeHTTP(w, httptest.NewRequest("GET", "/"+endpoint+"?"+q.Encode(), nil))
+			return parseJSONResponse(w)
+		}
+
+		It("signs requests with an app password as apiKey, and tokenInfo names its user", func() {
+			_, key, err := twofactor.Instance().CreateAPIKey(ctx, regularUser.ID, "Sonus · PC")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(withKey("ping", "apiKey", key).Status).To(Equal(responses.StatusOK))
+			info := withKey("tokenInfo", "apiKey", key)
+			Expect(info.Status).To(Equal(responses.StatusOK))
+			Expect(info.TokenInfo.Username).To(Equal(regularUser.UserName))
+			// what the key can see is its user's
+			Expect(withKey("getMusicFolders", "apiKey", key).Status).To(Equal(responses.StatusOK))
+		})
+
+		It("works for a user with two-step verification too", func() {
+			setUp()
+			_, password, _ := twofactor.Instance().CreateAppPassword(ctx, regularUser.ID, "phone")
+			Expect(withKey("ping", "apiKey", password).Status).To(Equal(responses.StatusOK))
+		})
+
+		It("answers 43 when other credentials come along, and 44 for a key that is no one's", func() {
+			_, key, _ := twofactor.Instance().CreateAPIKey(ctx, regularUser.ID, "x")
+			for _, other := range [][]string{{"u", regularUser.UserName}, {"p", "password"}, {"t", "abc", "s", "abc"}} {
+				resp := withKey("ping", append([]string{"apiKey", key}, other...)...)
+				Expect(resp.Status).To(Equal(responses.StatusFailed))
+				Expect(resp.Error.Code).To(Equal(int32(43)), "%v", other)
+			}
+			resp := withKey("ping", "apiKey", "no-such-key")
+			Expect(resp.Status).To(Equal(responses.StatusFailed))
+			Expect(resp.Error.Code).To(Equal(int32(44)))
+			Expect(twofactor.Instance().RevokeAPIKey(ctx, key)).To(BeTrue())
+			Expect(withKey("ping", "apiKey", key).Error.Code).To(Equal(int32(44)))
+		})
+
+		It("is announced with the browser sign-in", func() {
+			resp := doReq("getOpenSubsonicExtensions")
+			Expect(*resp.OpenSubsonicExtensions).To(ContainElements(
+				responses.OpenSubsonicExtension{Name: "apiKeyAuthentication", Versions: []int32{1}},
+				responses.OpenSubsonicExtension{Name: "sonusDeviceLogin", Versions: []int32{1}},
+			))
+		})
+	})
 })

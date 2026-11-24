@@ -172,4 +172,67 @@ var _ = Describe("Two-step verification at sign-in (Sonus)", Ordered, func() {
 		code, _ = call("POST", "/2fa/users/"+user.ID+"/reset", nil, session)
 		Expect(code).To(Equal(http.StatusForbidden)) // not an admin
 	})
+	Describe("browser sign-in for apps", func() {
+		session := func() string {
+			conf.Server.Sonus.TwoFactor = "off"
+			_, body := signIn("")
+			return body["token"].(string)
+		}
+		start := func() map[string]any {
+			code, body := call("POST", "/device/start", map[string]string{"client": "Sonus", "device": "书房电脑"}, "")
+			Expect(code).To(Equal(http.StatusOK))
+			Expect(body["verificationPath"]).To(Equal("/app/#/device?code=" + body["userCode"].(string)))
+			return body
+		}
+		poll := func(deviceCode string) map[string]any {
+			_, body := call("POST", "/device/poll", map[string]string{"deviceCode": deviceCode}, "")
+			return body
+		}
+
+		It("hands the app an API key once its user allows it, only once", func() {
+			s := start()
+			Expect(poll(s["deviceCode"].(string))["status"]).To(Equal("pending"))
+			token := session()
+			code, info := call("GET", "/device/"+strings.ToLower(s["userCode"].(string)), nil, token)
+			Expect(code).To(Equal(http.StatusOK))
+			Expect(info["client"]).To(Equal("Sonus"))
+			Expect(info["device"]).To(Equal("书房电脑"))
+			code, _ = call("POST", "/device/"+s["userCode"].(string)+"/approve", nil, token)
+			Expect(code).To(Equal(http.StatusNoContent))
+			got := poll(s["deviceCode"].(string))
+			Expect(got["status"]).To(Equal("approved"))
+			Expect(got["username"]).To(Equal(user.UserName))
+			key := got["apiKey"].(string)
+			Expect(twofactor.Instance().UserForAPIKey(ctx, key, "Sonus")).To(Equal(user.ID))
+			Expect(poll(s["deviceCode"].(string))["status"]).To(Equal("expired")) // handed over once
+			list, _ := twofactor.Instance().AppPasswords(ctx, user.ID)
+			Expect(list[0].Name).To(Equal("Sonus · 书房电脑"))
+			// the app gives it back when it signs out
+			code, _ = call("POST", "/device/revoke", map[string]string{"apiKey": key}, "")
+			Expect(code).To(Equal(http.StatusNoContent))
+			Expect(twofactor.Instance().UserForAPIKey(ctx, key, "Sonus")).To(BeEmpty())
+		})
+
+		It("tells the app when its user refuses, and needs a signed-in user to decide", func() {
+			s := start()
+			code, _ := call("POST", "/device/"+s["userCode"].(string)+"/approve", nil, "")
+			Expect(code).To(Equal(http.StatusUnauthorized))
+			token := session()
+			code, _ = call("POST", "/device/"+s["userCode"].(string)+"/deny", nil, token)
+			Expect(code).To(Equal(http.StatusNoContent))
+			Expect(poll(s["deviceCode"].(string))["status"]).To(Equal("denied"))
+			code, _ = call("POST", "/device/"+s["userCode"].(string)+"/approve", nil, token)
+			Expect(code).To(Equal(http.StatusNotFound))
+		})
+
+		It("forgets sign-ins after ten minutes", func() {
+			s := start()
+			pendingLogins.mu.Lock()
+			pendingLogins.byDevice[s["deviceCode"].(string)].created = time.Now().Add(-11 * time.Minute)
+			pendingLogins.mu.Unlock()
+			Expect(poll(s["deviceCode"].(string))["status"]).To(Equal("expired"))
+			code, _ := call("GET", "/device/"+s["userCode"].(string), nil, session())
+			Expect(code).To(Equal(http.StatusNotFound))
+		})
+	})
 })

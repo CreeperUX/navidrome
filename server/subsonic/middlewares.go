@@ -66,7 +66,7 @@ func checkRequiredParameters(next http.Handler) http.Handler {
 		var requiredParameters []string
 
 		username, _ := fromInternalOrProxyAuth(r)
-		if username != "" {
+		if username != "" || isAPIKeyRequest(r) { // an API key comes without u= (sonus_auth.go)
 			requiredParameters = []string{"v", "c"}
 		} else {
 			requiredParameters = []string{"u", "v", "c"}
@@ -119,6 +119,16 @@ func authenticate(ds model.DataStore) func(next http.Handler) http.Handler {
 				} else if err != nil {
 					log.Error(ctx, "API: Error authenticating username", "auth", authType, "username", username, "remoteAddr", r.RemoteAddr, err)
 				}
+			} else if isAPIKeyRequest(r) {
+				// Sonus: OpenSubsonic apiKeyAuthentication, an app password as apiKey= (sonus_auth.go)
+				usr, err = authenticateAPIKey(ctx, ds, r, limiter)
+				if err != nil {
+					if ctx.Err() == nil {
+						sendError(w, r, err)
+					}
+					return
+				}
+				ctx = request.WithUsername(ctx, usr.UserName)
 			} else {
 				p := req.Params(r)
 				username, _ := p.String("u")

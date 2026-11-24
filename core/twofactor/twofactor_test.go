@@ -213,4 +213,35 @@ var _ = Describe("Store", func() {
 			Expect(store.Enabled(ctx, "u1")).To(BeFalse())
 		})
 	})
+
+	Describe("API keys", func() {
+		It("find their user, as shown, without dashes or in capitals, and note the client", func() {
+			_, password, _ := store.CreateAppPassword(ctx, "u1", "phone")
+			for _, key := range []string{password, strings.ReplaceAll(password, "-", ""), strings.ToUpper(password)} {
+				Expect(store.UserForAPIKey(ctx, key, "Symfonium")).To(Equal("u1"), key)
+			}
+			Expect(store.UserForAPIKey(ctx, "nope", "x")).To(BeEmpty())
+			list, _ := store.AppPasswords(ctx, "u1")
+			Expect(list[0].LastUsedBy).To(Equal("Symfonium"))
+		})
+
+		It("made for the browser sign-in are longer, and given back by their app", func() {
+			ap, key, err := store.CreateAPIKey(ctx, "u2", "Sonus · PC")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(ap.Name).To(Equal("Sonus · PC"))
+			Expect(strings.ReplaceAll(key, "-", "")).To(HaveLen(32))
+			Expect(store.UserForAPIKey(ctx, key, "Sonus")).To(Equal("u2"))
+			Expect(store.RevokeAPIKey(ctx, key)).To(BeTrue())
+			Expect(store.RevokeAPIKey(ctx, key)).To(BeFalse())
+			Expect(store.UserForAPIKey(ctx, key, "Sonus")).To(BeEmpty())
+		})
+
+		It("include app passwords made before API keys, once their hashes are filled in", func() {
+			_, password, _ := store.CreateAppPassword(ctx, "u1", "old")
+			_, err := d.Exec(`UPDATE sonus_app_password SET secret_hash = ''`)
+			Expect(err).ToNot(HaveOccurred())
+			later := New(d) // a server started again
+			Expect(later.UserForAPIKey(ctx, password, "x")).To(Equal("u1"))
+		})
+	})
 })
