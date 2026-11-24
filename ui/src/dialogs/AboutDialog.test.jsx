@@ -56,13 +56,13 @@ describe('<LinkToVersion />', () => {
   })
 
   it('should render link to the fork commit for Sonus builds', () => {
-    const version = '0.64.2-sonus (046ddbb5)'
+    const version = '0.64.2-sonus.8 (046ddbb5)' // 0.64.2-sonus.<n>: the frozen base and the build number
     render(<Wrapper version={version} />)
 
     const link = screen.queryByRole('link')
     expect(link.href).toBe(
       'https://github.com/CreeperUX/navidrome/commit/046ddbb5',
     )
-    expect(link.textContent).toBe('0.64.2-sonus')
+    expect(link.textContent).toBe('0.64.2-sonus.8')
   })
 })

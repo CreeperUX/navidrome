@@ -180,8 +180,9 @@ EOT
 ########################################################################################################################
 ### Build Final Image
 FROM alpine:3.22 AS final
-LABEL maintainer="deluan@navidrome.org"
-LABEL org.opencontainers.image.source="https://github.com/navidrome/navidrome"
+# Sonus: this image is the CreeperUX fork's (frozen at Navidrome 0.64.2), not Navidrome's own
+LABEL maintainer="CreeperUX"
+LABEL org.opencontainers.image.source="https://github.com/CreeperUX/navidrome"
 
 # Install runtime dependencies
 # - libwebp + symlinks: enables native WebP encoding via purego/dlopen

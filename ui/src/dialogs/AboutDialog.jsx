@@ -87,7 +87,7 @@ const LinkToVersion = ({ version }) => {
   const parts = version.split(' ')
   const commitID = parts[1].replace(/[()]/g, '')
   const isSnapshot = version.includes('SNAPSHOT')
-  // Sonus builds (0.64.2-sonus) come from the CreeperUX/navidrome fork: link to the commit there
+  // Sonus builds (0.64.2-sonus.<n>) come from the CreeperUX/navidrome fork: link to the commit there
   const isSonus = /-(sonus|creeperux)\b/.test(parts[0])
   const url = isSonus
     ? `https://github.com/CreeperUX/navidrome/commit/${commitID}`

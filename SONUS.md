@@ -1,8 +1,8 @@
 # Sonus (this fork)
 
-Upstream Navidrome, on the `creeperux` branch, with what Sonus (a Windows player) needs, built into
-`ghcr.io/creeperux/navidrome` (`.github/workflows/creeperux-image.yml`). Everything else is upstream's, and upstream
-releases are merged in.
+Navidrome, frozen at 0.64.2, on the `creeperux` branch, with what Sonus (a Windows player) needs, built into
+`ghcr.io/creeperux/navidrome` (`.github/workflows/creeperux-image.yml`). Upstream is no longer merged in: see
+[Frozen at Navidrome 0.64.2](#frozen-at-navidrome-0642).
 
 - **Sonus Connect** (`server/connect`, see its README): a user's players see and control each other.
 - **Sonus's look** in the web UI: name, icons, and the default Sonus theme (`ui/src/themes/sonus.js`).
@@ -63,3 +63,31 @@ A sign-in waits 10 minutes at most (200 at a time, kept in memory: a restart dro
 `start` and `revoke` are rate-limited per address as `/auth/login` is (`AuthRequestLimit` per `AuthWindowLength`).
 Both extensions are listed by `getOpenSubsonicExtensions`, which needs no sign-in, so an app can tell whether to offer
 the browser sign-in.
+
+## Frozen at Navidrome 0.64.2
+
+Since 2026-11-24 this fork no longer merges upstream: it is Navidrome 0.64.2 (upstream commit `10114574`), developed
+on its own from there. A new web UI comes next, and parts of the server are to be rewritten in Rust over time, behind
+the same APIs (the Subsonic/OpenSubsonic API and the Sonus extensions above), so clients never notice the change.
+
+- **Security fixes** are this fork's to make now. Upstream's are watched (its security advisories and `fix` commits)
+  and done here by hand when they concern code this fork has; they rarely apply as commits any more. Done so far:
+  - The config dump redacts Last.fm keys and the Prometheus password (upstream `46c43271`, picked as is).
+  - Request bodies on the native API and the Jellyfin API are bounded (4 MiB; uploads keep their own limits), in
+    place of upstream's per-route limits (#6505, #6506): `server/sonus_limits.go`.
+  - Not needed: the DSD transcoding cap fix (#6445): the cap it fixes came after 0.64.2.
+- **Versions**: `0.64.2-sonus.<n>`, n being the commits on this branch since 0.64.2, so each build counts up by
+  itself; the image is tagged with it (and `latest`, `sha-<commit>`), and the server reports it (Subsonic
+  `serverVersion`, the web UI's About). Clients that compare Navidrome versions see 0.64.2, the Navidrome this is.
+- **The image is built again every Monday**, code changed or not, with the newest Alpine packages (ffmpeg and the
+  rest); Unraid's daily update picks it up.
+- **Nothing reaches Navidrome's own services by default**: the anonymous usage statistics (insights.navidrome.org) are
+  off, and the login page's background is the built-in one rather than Navidrome's collection from navidrome.org
+  (`UILoginBackgroundURL=/backgrounds` opts back in). The web UI's help links still point to navidrome.org's
+  documentation, which describes this version's settings. Last.fm, Deezer and ListenBrainz are third parties, on as
+  before.
+- **The database**: upstream's tables as 0.64.2 left them, Sonus's own beside them (`db/sonus.go`). As long as
+  upstream's tables are not changed here, a later upstream Navidrome can still open this data (its migrations run
+  from 0.64.2).
+- Upstream's CI and repository templates are gone; `upstream` stays as a remote to read from, nothing more.
+- **License**: GPL-3.0, as Navidrome; its copyright notices stay.

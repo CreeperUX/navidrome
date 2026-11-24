@@ -15,8 +15,8 @@ made for Sonus, a Windows player; any client can implement it from this page.
 ## The Docker image
 
 `.github/workflows/creeperux-image.yml` builds this branch with upstream's Dockerfile into
-`ghcr.io/creeperux/navidrome` (linux/amd64, linux/arm64) on every push: tags `latest`, `<upstream version>-sonus`
-(`0.64.2-sonus`) and `sha-<commit>`. In a compose file, only the image changes; the data folder stays as it is:
+`ghcr.io/creeperux/navidrome` (linux/amd64, linux/arm64) on every push and every Monday: tags `latest`, `0.64.2-sonus.<n>`
+(`0.64.2-sonus.9`; SONUS.md) and `sha-<commit>`. In a compose file, only the image changes; the data folder stays as it is:
 
 ```yaml
 services:
