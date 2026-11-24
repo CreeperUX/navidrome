@@ -31,7 +31,8 @@ const useStyles = makeStyles((theme) => ({
 
 // The browser sign-in's approval page (Sonus, server/sonus_device.go): an app (Sonus on some computer) asked to sign
 // in; the signed-in user checks its code matches what the app shows and allows it, which hands the app an API key of
-// its own, or refuses. #/device?code=ABCD-EFGH, as the app opens it. The route keys it on the query, so another app's
+// its own, or refuses. The Sonus server also says where the request came from, and takes a verification code to allow
+// it (codeRequired): someone talked into opening another person's link does not hand a key over with one click. #/device?code=ABCD-EFGH, as the app opens it. The route keys it on the query, so another app's
 // link opened on this page starts over with that code.
 const DeviceApproval = ({ location }) => {
   const translate = useTranslate()
@@ -45,11 +46,15 @@ const DeviceApproval = ({ location }) => {
   const [info, setInfo] = useState(null)
   const [state, setState] = useState(code ? 'loading' : 'ask')
   const [busy, setBusy] = useState(false)
+  const [otp, setOtp] = useState('')
+  const [error, setError] = useState('')
 
   useEffect(() => {
     if (!code) return undefined
     let current = true // a later code's answer wins over this one's, however late it comes
     setState('loading')
+    setOtp('')
+    setError('')
     authCall('GET', `/device/${encodeURIComponent(code)}`)
       .then((i) => {
         if (!current) return
@@ -64,14 +69,22 @@ const DeviceApproval = ({ location }) => {
 
   const decide = async (allow) => {
     setBusy(true)
+    setError('')
     try {
       await authCall(
         'POST',
         `/device/${encodeURIComponent(info.userCode)}/${allow ? 'approve' : 'deny'}`,
+        allow && info.codeRequired ? { code: otp.trim() } : undefined,
       )
       setState(allow ? 'allowed' : 'denied')
-    } catch {
-      setState('missing')
+    } catch (e) {
+      if (e.twoFactor === 'code') {
+        setError(translate('sonus.twoFactor.invalidCode'))
+      } else if (e.status === 429) {
+        setError(translate('sonus.twoFactor.tooMany'))
+      } else {
+        setState('missing')
+      }
     } finally {
       setBusy(false)
     }
@@ -92,6 +105,11 @@ const DeviceApproval = ({ location }) => {
                 user: localStorage.getItem('username') || '',
               })}
             </Typography>
+            {info.address && (
+              <Typography variant="body2">
+                {translate('sonus.device.from', { address: info.address })}
+              </Typography>
+            )}
             <Typography variant="body2">
               {translate('sonus.device.compare')}
             </Typography>
@@ -104,6 +122,32 @@ const DeviceApproval = ({ location }) => {
             <Typography variant="body2" color="textSecondary">
               {translate('sonus.device.whatItGets')}
             </Typography>
+            {info.codeRequired && (
+              <>
+                <Typography variant="body2">
+                  {translate('sonus.device.codeExplain')}
+                </Typography>
+                <TextField
+                  label={translate('sonus.twoFactor.code')}
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && otp.trim().length >= 6 && !busy)
+                      decide(true)
+                  }}
+                  inputProps={{
+                    autoComplete: 'one-time-code',
+                    autoCapitalize: 'none',
+                    'aria-label': translate('sonus.twoFactor.code'),
+                  }}
+                />
+              </>
+            )}
+            {error && (
+              <Typography variant="body2" color="error" role="alert">
+                {error}
+              </Typography>
+            )}
             <div className={classes.actions}>
               <Button onClick={() => decide(false)} disabled={busy}>
                 {translate('sonus.device.deny')}
@@ -112,7 +156,7 @@ const DeviceApproval = ({ location }) => {
                 variant="contained"
                 color="primary"
                 onClick={() => decide(true)}
-                disabled={busy}
+                disabled={busy || (info.codeRequired && otp.trim().length < 6)}
               >
                 {translate('sonus.device.allow', { client })}
               </Button>

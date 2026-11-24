@@ -66,7 +66,28 @@ describe('Sonus: two-step verification at sign-in (authProvider)', () => {
     )
     await expect(
       authProvider.login({ username: 'alice', password: 'secret' }),
-    ).rejects.toMatchObject({ twoFactor: 'setup', setupToken: 'setup-jwt' })
+    ).rejects.toMatchObject({
+      twoFactor: 'setup',
+      setupToken: 'setup-jwt',
+      enrolmentCodeRequired: false,
+    })
+  })
+
+  it('tells the sign-in page when the set-up takes an enrolment code (the Sonus server)', async () => {
+    vi.stubGlobal(
+      'fetch',
+      respond(401, {
+        twoFactor: 'setup',
+        setupToken: 'setup-jwt',
+        enrolmentCodeRequired: true,
+      }),
+    )
+    await expect(
+      authProvider.login({ username: 'alice', password: 'secret' }),
+    ).rejects.toMatchObject({
+      twoFactor: 'setup',
+      enrolmentCodeRequired: true,
+    })
   })
 
   it('keeps no password-derived Subsonic token when the server sends none', async () => {

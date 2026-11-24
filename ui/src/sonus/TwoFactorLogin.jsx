@@ -46,6 +46,7 @@ export const TwoFactorLogin = ({
           {twoFactor.step === 'setup' ? (
             <TwoFactorSetup
               token={twoFactor.token}
+              needsEnrolmentCode={twoFactor.enrolment}
               intro={translate('sonus.twoFactor.requiredExplain')}
               onDone={onSetupDone}
               onCancel={onCancel}
@@ -109,6 +110,7 @@ TwoFactorLogin.propTypes = {
   twoFactor: PropTypes.shape({
     step: PropTypes.oneOf(['code', 'setup']).isRequired,
     token: PropTypes.string,
+    enrolment: PropTypes.bool,
   }).isRequired,
   loading: PropTypes.bool,
   loginClasses: PropTypes.object.isRequired,

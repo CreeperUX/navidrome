@@ -59,6 +59,8 @@ const authProvider = {
             const error = new Error(body.error || response.statusText)
             error.twoFactor = body.twoFactor
             error.setupToken = body.setupToken
+            // the Sonus server: the set-up takes the enrolment code an admin handed over
+            error.enrolmentCodeRequired = body.enrolmentCodeRequired === true
             throw error
           }
           throw new Error(response.statusText)

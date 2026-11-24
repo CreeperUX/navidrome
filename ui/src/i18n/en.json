@@ -779,7 +779,12 @@
       "requiredExplain": "This server requires two-step verification. Set it up to finish signing in.",
       "signInTitle": "Two-step verification",
       "enterCode": "Enter the 6-digit code from your authenticator app.",
-      "useRecovery": "Lost your phone? Enter one of your recovery codes instead."
+      "useRecovery": "Lost your phone? Enter one of your recovery codes instead.",
+      "tooMany": "Too many wrong codes. No code is accepted for this account for up to an hour.",
+      "enrolTitle": "Enter your enrolment code",
+      "enrolExplain": "To set up two-step verification for the first time, enter the one-time enrolment code your administrator gave you with your password.",
+      "enrolCode": "Enrolment code",
+      "invalidEnrolment": "That enrolment code is not right, or it has expired or was used. Ask your administrator for a new one."
     },
     "appPasswords": {
       "title": "App passwords",
@@ -811,7 +816,26 @@
       "denied": "%{client} was refused.",
       "missing": "No sign-in is waiting for this code: it may have expired. Start again in the app.",
       "typeCode": "Enter the code the app shows.",
-      "continue": "Continue"
+      "continue": "Continue",
+      "from": "The request came from %{address}.",
+      "codeExplain": "To allow it, enter a code from your authenticator app, or one of your recovery codes."
+    },
+    "userTwoFactor": {
+      "on": "On since %{date}.",
+      "off": "Not set up.",
+      "waiting": "An enrolment code is waiting for this user. It works until %{date}.",
+      "needsCode": "To set it up at their first sign-in, this user needs a one-time enrolment code besides their password.",
+      "makeCode": "Make an enrolment code",
+      "makeTitle": "Make an enrolment code for %{name}?",
+      "makeExplain": "The user enters it once, after their password, to set up two-step verification. A code made earlier stops working.",
+      "reset": "Reset two-step verification",
+      "resetTitle": "Reset two-step verification for %{name}?",
+      "resetExplain": "Their authenticator and recovery codes stop working, and they set it up again at their next sign-in. Their app passwords and signed-in apps keep working.",
+      "resetDone": "Two-step verification was reset",
+      "codeTitle": "Enrolment code for %{name}",
+      "codeExplain": "Give this code to the user together with their password, over a channel you trust. It works once, until %{date}.",
+      "onlyOnce": "It is shown only now. If it is lost, make another: this one then stops working.",
+      "unsupported": "This server does not use enrolment codes."
     }
   }
 }

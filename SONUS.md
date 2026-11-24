@@ -64,6 +64,22 @@ A sign-in waits 10 minutes at most (200 at a time, kept in memory: a restart dro
 Both extensions are listed by `getOpenSubsonicExtensions`, which needs no sign-in, so an app can tell whether to offer
 the browser sign-in.
 
+## Behind the Sonus server: what `/auth` asks for there
+
+In the Sonus server's image the Rust server answers everything under `/auth` in this Navidrome's place (the Sonus
+repository's `server/README.md`, "The `/auth` routes"). Since the security review of 2026-11-24 it asks for more than
+the routes described above, and the web UI here (`ui/src/sonus`) sends it, when there is something to send; this
+Navidrome's own routes read past the extra fields, so the UI works against either.
+
+- **A first set-up takes an enrolment code** where two-step verification is required: `enrolmentCode` in the bodies
+  of `POST /auth/2fa/setup` and `/2fa/confirm`. The sign-in's answer says so (`enrolmentCodeRequired`). An admin
+  makes the code on the user's page (`POST /auth/2fa/users/{id}/enrolment-code`, or the answer of a reset) and hands
+  it over with the password.
+- **Allowing an app takes a verification code**: `GET /auth/device/{code}` also answers `address` (who asked) and
+  `codeRequired`; `POST /auth/device/{code}/approve` then takes `{"code": …}`.
+- **So do making an app password** (`POST /auth/app-passwords` with `code`) **and an admin's reset** (`POST
+  /auth/2fa/users/{id}/reset` with `code`), for an account that has two-step verification.
+
 ## Frozen at Navidrome 0.64.2
 
 Since 2026-11-24 this fork no longer merges upstream: it is Navidrome 0.64.2 (upstream commit `10114574`), developed

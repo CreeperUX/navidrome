@@ -97,6 +97,8 @@ export const SecurityCard = () => {
       if (action === 'recovery') {
         const res = await newRecoveryCodes(code.trim())
         setDialog({ kind: 'recovery', codes: res.recoveryCodes })
+      } else if (action === 'appPassword') {
+        await makeAppPassword(code.trim())
       } else if (action === 'disable') {
         await disableTwoFactor(code.trim())
         setDialog(null)
@@ -122,17 +124,26 @@ export const SecurityCard = () => {
     reload()
   }
 
+  const makeAppPassword = async (withCode) => {
+    const res = await createAppPassword(name.trim(), withCode)
+    setDialog({
+      kind: 'created',
+      name: res.appPassword.name,
+      password: res.password,
+    })
+    setName('')
+  }
+
   const create = async (e) => {
     e.preventDefault()
+    // an app password skips two-step verification for good: with it on, making one takes a code (the Sonus server)
+    if (status?.enabled && status.mode !== 'off') {
+      askCode('appPassword')
+      return
+    }
     setBusy(true)
     try {
-      const res = await createAppPassword(name.trim())
-      setDialog({
-        kind: 'created',
-        name: res.appPassword.name,
-        password: res.password,
-      })
-      setName('')
+      await makeAppPassword()
       reload()
     } catch (err) {
       fail(err)

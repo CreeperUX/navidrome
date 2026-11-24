@@ -348,6 +348,7 @@ const Login = ({ location }) => {
           setTwoFactor({
             step: error.twoFactor,
             token: error.setupToken,
+            enrolment: error.enrolmentCodeRequired === true,
             auth: credentials,
           })
           return
