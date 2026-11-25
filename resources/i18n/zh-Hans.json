@@ -768,7 +768,12 @@
       "requiredExplain": "这个服务器要求开启二步验证。绑定之后就能完成登录。",
       "signInTitle": "二步验证",
       "enterCode": "输入验证器 App 上的 6 位验证码。",
-      "useRecovery": "手机不在身边？也可以输入一个恢复码。"
+      "useRecovery": "手机不在身边？也可以输入一个恢复码。",
+      "tooMany": "错误的验证码太多了。这个账号在最多一小时内不再接受任何验证码。",
+      "enrolTitle": "输入绑定码",
+      "enrolExplain": "第一次绑定二步验证，需要管理员连同密码一起交给你的一次性绑定码。",
+      "enrolCode": "绑定码",
+      "invalidEnrolment": "绑定码不对，或者已经过期、已经用过。请向管理员要一个新的。"
     },
     "appPasswords": {
       "title": "应用专用密码",
@@ -800,7 +805,26 @@
       "denied": "已拒绝 %{client}。",
       "missing": "没有找到等待这个代码的登录，可能已经过期。请在应用里重新开始。",
       "typeCode": "输入应用里显示的代码。",
-      "continue": "继续"
+      "continue": "继续",
+      "from": "这个请求来自 %{address}。",
+      "codeExplain": "要允许它，请输入验证器 App 上的验证码，或者一个恢复码。"
+    },
+    "userTwoFactor": {
+      "on": "%{date} 起已开启。",
+      "off": "尚未绑定。",
+      "waiting": "已有一个绑定码在等这位用户使用，%{date} 前有效。",
+      "needsCode": "这位用户第一次登录时要绑定二步验证，除了密码还需要一个一次性绑定码。",
+      "makeCode": "生成绑定码",
+      "makeTitle": "给 %{name} 生成绑定码？",
+      "makeExplain": "用户输入密码之后再输入它一次，用来绑定二步验证。之前生成的绑定码会失效。",
+      "reset": "重置二步验证",
+      "resetTitle": "重置 %{name} 的二步验证？",
+      "resetExplain": "对方的验证器和恢复码都会失效，下次登录时需要重新绑定。应用专用密码和已登录的应用不受影响。",
+      "resetDone": "二步验证已重置",
+      "codeTitle": "%{name} 的绑定码",
+      "codeExplain": "请通过可靠的方式把它连同密码一起交给用户。它只能用一次，%{date} 前有效。",
+      "onlyOnce": "它只显示这一次。弄丢了就再生成一个，这一个随即失效。",
+      "unsupported": "这个服务器不使用绑定码。"
     }
   }
 }

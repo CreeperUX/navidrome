@@ -25,6 +25,7 @@ import { Title } from '../common'
 import DeleteUserButton from './DeleteUserButton'
 import { LibrarySelectionField } from './LibrarySelectionField.jsx'
 import { validateUserForm } from './userValidation'
+import { UserTwoFactor } from '../sonus/UserTwoFactor'
 
 const useStyles = makeStyles({
   toolbar: {
@@ -182,6 +183,9 @@ const UserEdit = (props) => {
           inputProps={{ style: { resize: 'vertical' } }}
           helperText={translate('resources.user.helperTexts.scrobbleFilter')}
         />
+
+        {/* Sonus: the user's two-step verification, as an admin sees it: an enrolment code, a reset */}
+        {permissions === 'admin' && <UserTwoFactor />}
 
         <DateField variant="body1" source="lastLoginAt" showTime />
         <DateField variant="body1" source="lastAccessAt" showTime />

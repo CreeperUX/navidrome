@@ -766,7 +766,12 @@
       "requiredExplain": "這台伺服器要求開啟兩步驟驗證。綁定後即可完成登入。",
       "signInTitle": "兩步驟驗證",
       "enterCode": "輸入驗證器 App 上的 6 位數驗證碼。",
-      "useRecovery": "手機不在身邊？也可以輸入一組復原碼。"
+      "useRecovery": "手機不在身邊？也可以輸入一組復原碼。",
+      "tooMany": "錯誤的驗證碼太多了。這個帳號在最多一小時內不再接受任何驗證碼。",
+      "enrolTitle": "輸入綁定碼",
+      "enrolExplain": "第一次綁定兩步驟驗證，需要管理員連同密碼一起交給你的一次性綁定碼。",
+      "enrolCode": "綁定碼",
+      "invalidEnrolment": "綁定碼不正確，或已過期、已使用。請向管理員索取新的。"
     },
     "appPasswords": {
       "title": "應用程式專用密碼",
@@ -798,7 +803,26 @@
       "denied": "已拒絕 %{client}。",
       "missing": "找不到等待這組代碼的登入，可能已過期。請在應用程式中重新開始。",
       "typeCode": "輸入應用程式顯示的代碼。",
-      "continue": "繼續"
+      "continue": "繼續",
+      "from": "這個請求來自 %{address}。",
+      "codeExplain": "要允許它，請輸入驗證器 App 上的驗證碼，或一組復原碼。"
+    },
+    "userTwoFactor": {
+      "on": "%{date} 起已開啟。",
+      "off": "尚未綁定。",
+      "waiting": "已有一組綁定碼等這位使用者使用，%{date} 前有效。",
+      "needsCode": "這位使用者第一次登入時要綁定兩步驟驗證，除了密碼還需要一組一次性綁定碼。",
+      "makeCode": "產生綁定碼",
+      "makeTitle": "為 %{name} 產生綁定碼？",
+      "makeExplain": "使用者輸入密碼後再輸入它一次，用來綁定兩步驟驗證。先前產生的綁定碼會失效。",
+      "reset": "重設兩步驟驗證",
+      "resetTitle": "重設 %{name} 的兩步驟驗證？",
+      "resetExplain": "對方的驗證器和復原碼都會失效，下次登入時需要重新綁定。應用程式專用密碼和已登入的應用程式不受影響。",
+      "resetDone": "兩步驟驗證已重設",
+      "codeTitle": "%{name} 的綁定碼",
+      "codeExplain": "請透過可靠的方式把它連同密碼一起交給使用者。它只能使用一次，%{date} 前有效。",
+      "onlyOnce": "它只顯示這一次。遺失的話再產生一組，這一組隨即失效。",
+      "unsupported": "這個伺服器不使用綁定碼。"
     }
   }
 }
